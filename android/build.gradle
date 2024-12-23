@@ -1,0 +1,46 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+rootProject.buildDir = '../build'
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+subprojects {
+    project.evaluationDependsOn(':app')
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}
+buildscript {
+     ext.kotlin_version = '2.0.21'
+
+    repositories {  // Thêm phần repositories này
+        google()
+        mavenCentral()
+    }
+
+    dependencies {
+        
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'com.google.gms:google-services:4.4.0'
+    }
+}
+
+// Thêm phần allprojects
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Thêm phần repositories ở cấp độ root nếu cần
+repositories {
+    google()
+    mavenCentral()
+}

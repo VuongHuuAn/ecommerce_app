@@ -74,49 +74,63 @@ authRouter.get('/', auth, async (req, res) => {
 });
 
 
+// Reset Password Route - Step 1: Get reset token
 authRouter.post("/api/reset-password", async (req, res) => {
   try {
-      const { email } = req.body;
-      const user = await User.findOne({ email });
-      if (!user) {
-          return res.status(400).json({ msg: "User with this email does not exist!" });
-      }
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: "User with this email does not exist!" });
+    }
+    
+    const resetToken = jwt.sign(
+      { id: user._id },
+      "passwordResetKey",
+      { expiresIn: '1h' }
+    );
 
-      
-      const resetToken = jwt.sign(
-          { id: user._id },
-          "passwordResetKey",
-          { expiresIn: '1h' }
-      );
-
-      res.json({ resetToken });
+    res.json({ resetToken });
   } catch (e) {
-      res.status(500).json({ error: e.message });
+    res.status(500).json({ error: e.message });
   }
 });
 
-// Update Password Route
+// Update Password Route - Step 2: Update password
 authRouter.post("/api/update-password", async (req, res) => {
   try {
-      const { resetToken, newPassword } = req.body;
-      if (newPassword.length < 6) {
-          return res.status(400).json({ msg: "Password must be at least 6 characters" });
-      }
+    const { resetToken, newPassword } = req.body;
+    
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ msg: "Missing required fields" });
+    }
 
-      const verified = jwt.verify(resetToken, "passwordResetKey");
-      if (!verified) {
-          return res.status(400).json({ msg: "Invalid or expired reset token" });
-      }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ msg: "Password must be at least 6 characters" });
+    }
 
-      const hashedPassword = await bcryptjs.hash(newPassword, 8);
-      await User.findByIdAndUpdate(
-          verified.id,
-          { password: hashedPassword }
-      );
+    const verified = jwt.verify(resetToken, "passwordResetKey");
+    if (!verified) {
+      return res.status(400).json({ msg: "Invalid or expired reset token" });
+    }
 
-      res.json({ msg: "Password updated successfully" });
+    const hashedPassword = await bcryptjs.hash(newPassword, 8);
+    const user = await User.findByIdAndUpdate(
+      verified.id,
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(400).json({ msg: "User not found" });
+    }
+
+    res.json({ msg: "Password updated successfully" });
   } catch (e) {
+    if (e.name === 'JsonWebTokenError') {
+      res.status(400).json({ msg: "Invalid reset token" });
+    } else {
       res.status(500).json({ error: e.message });
+    }
   }
 });
 // Đăng nhập bằng Google

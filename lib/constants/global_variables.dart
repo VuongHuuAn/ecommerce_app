@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-// String uri = 'https://amazon-shop-on-backend.vercel.app';
-String uri = "http://192.168.118.81:3000";
+// String uri = "https://ecommerce-backend-zeta-ten.vercel.app";
+String uri = "http://192.168.90.77:3000";
 
 class GlobalVariables {
   // COLORS
@@ -12,7 +12,7 @@ class GlobalVariables {
     ],
     stops: [0.5, 1.0],
   );
-  
+
   static const secondaryColor = Color.fromRGBO(255, 153, 0, 1);
   static const backgroundColor = Colors.white;
 

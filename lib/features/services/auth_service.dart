@@ -258,26 +258,46 @@ class AuthService {
 
   // Thêm phương thức reset password
 // Thêm phương thức quên mật khẩu
+  // ... existing code ...
+
   Future<void> resetPassword({
     required BuildContext context,
     required String email,
     required String newPassword,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$uri/api/forgot-password'), // Sửa endpoint
+      // Bước 1: Lấy reset token
+      final tokenResponse = await http.post(
+        Uri.parse('$uri/api/reset-password'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
         body: jsonEncode({
           'email': email,
+        }),
+      );
+
+      if (tokenResponse.statusCode != 200) {
+        throw Exception(jsonDecode(tokenResponse.body)['msg']);
+      }
+
+      final resetToken = jsonDecode(tokenResponse.body)['resetToken'];
+
+      // Bước 2: Cập nhật mật khẩu mới
+      final updateResponse = await http.post(
+        Uri.parse('$uri/api/update-password'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'resetToken': resetToken,
           'newPassword': newPassword,
         }),
       );
 
       if (!context.mounted) return;
 
-      if (response.statusCode == 200) {
+      if (updateResponse.statusCode == 200) {
         _showSnackBar(context, 'Đặt lại mật khẩu thành công!');
         Navigator.pushNamedAndRemoveUntil(
           context,
@@ -285,12 +305,14 @@ class AuthService {
           (route) => false,
         );
       } else {
-        final errorMsg =
-            jsonDecode(response.body)['msg'] ?? 'Đặt lại mật khẩu thất bại';
+        final errorMsg = jsonDecode(updateResponse.body)['msg'] ??
+            'Đặt lại mật khẩu thất bại';
         _showSnackBar(context, errorMsg, isError: true);
       }
     } catch (e) {
-      _showSnackBar(context, e.toString(), isError: true);
+      if (context.mounted) {
+        _showSnackBar(context, e.toString(), isError: true);
+      }
     }
   }
 }

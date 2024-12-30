@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-// String uri = "https://ecommerce-backend-zeta-ten.vercel.app";
-String uri = "http://192.168.90.77:3000";
+String uri = "https://server-one-mu-95.vercel.app";
+// String uri = "http://192.168.90.77:3000";
 
 class GlobalVariables {
   // COLORS
